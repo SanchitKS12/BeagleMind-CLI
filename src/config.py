@@ -27,3 +27,50 @@ RERANK_TOP_K = 5
 COLLECTION_NAME = 'beagleboard'
 
 RAG_BACKEND_URL = 'https://mind-api.beagleboard.org/api'
+
+import os
+import json
+
+class ConfigManager:
+    def __init__(self, path="~/.beaglemind_config.json"):
+        self.path = os.path.expanduser(path)
+        self.default_config = {
+            "collection_name": "default_collection",
+            "default_backend": "groq",
+            "default_model": "mixtral-8x7b",
+            "default_temperature": 0.3,
+            "default_use_tools": False
+        }
+
+        # Load or create the config file on initialization
+        self.config = self.load()
+
+    def load(self):
+        """Load config from file, or create one if missing."""
+        if os.path.exists(self.path):
+            try:
+                with open(self.path, "r") as f:
+                    return json.load(f)
+            except json.JSONDecodeError:
+                print("⚠️ Config file corrupted. Loading defaults.")
+        else:
+            # Create file if it doesn't exist
+            self.save(self.default_config)
+        return self.default_config.copy()
+
+    def save(self, data=None):
+        """Save current or given config to disk."""
+        if data is None:
+            data = self.config
+        os.makedirs(os.path.dirname(self.path), exist_ok=True)
+        with open(self.path, "w") as f:
+            json.dump(data, f, indent=4)
+
+    def get(self, key):
+        """Get a specific config value."""
+        return self.config.get(key, self.default_config.get(key))
+
+    def set(self, key, value):
+        """Update a specific config value and save."""
+        self.config[key] = value
+        self.save()

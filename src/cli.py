@@ -17,6 +17,7 @@ from rich.text import Text
 from rich.spinner import Spinner
 from rich.live import Live
 import time
+from config import ConfigManager
 
 from .qa_system import QASystem
 from .config import *
