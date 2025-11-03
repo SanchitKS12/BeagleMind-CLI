@@ -585,6 +585,8 @@ def chat(prompt, backend, model, temperature, strategy, sources, tools, interact
             use_tools=use_tools
         )
 
+class ConfigManager:
+    
 
 if __name__ == "__main__":
     cli()
