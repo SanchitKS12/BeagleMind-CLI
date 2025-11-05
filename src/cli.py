@@ -9,6 +9,7 @@ import re
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 import click
+from config import ConfigManager
 from rich.console import Console
 from rich.table import Table
 from rich.markdown import Markdown
