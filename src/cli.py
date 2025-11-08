@@ -120,12 +120,17 @@ BEAGLEMIND_BANNER = """
 
 class BeagleMindCLI:
     def __init__(self):
-        # self.qa_system = None
-        # self.config = self.load_config()
+        self.qa_system = None
         self.config_manager = ConfigManager()
-        self.config_manager.get("default_model")
-        self.config_manager.set("default_model", "new_model")
 
+    def get_default_model(self):
+        return self.config_manager.get("default_model")
+
+    def set_default_model(self, model_name):
+        self.config_manager.set("default_model", model_name)
+
+    def save_config(self):
+        self.config_manager.save()
 
         
     # def load_config(self) -> Dict[str, Any]:
