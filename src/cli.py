@@ -197,20 +197,26 @@ class BeagleMindCLI:
         if backend:
             backend = backend.lower()
             if backend == "groq":
-                add_models_to_table("groq", self.config_manager.get("groq"), "Cloud") 
-                      
+                # add_models_to_table("groq", self.config_manager.get("groq"), "Cloud") 
+                add_models_to_table("groq", self.config_manager.get_models("groq"), "Cloud")
             elif backend == "openai":
-                add_models_to_table("openai", OPENAI_MODELS, "Cloud")
+                # add_models_to_table("openai", OPENAI_MODELS, "Cloud")
+                add_models_to_table("openai", self.config_manager.get_models("openai"), "Cloud")
             elif backend == "ollama":
-                add_models_to_table("ollama", OLLAMA_MODELS, "Local")
+                # add_models_to_table("ollama", OLLAMA_MODELS, "Local")
+                add_models_to_table("ollama", self.config_manager.get_models("ollama"), "Cloud")
             else:
-                console.print(f"[red]Unknown backend: {backend}. Available: {', '.join(LLM_BACKENDS)}[/red]")
+                # console.print(f"[red]Unknown backend: {backend}. Available: {', '.join(LLM_BACKENDS)}[/red]")
+                console.print(f"[red]Unknown backend: {backend}. Available: {', '.join(self.config_manager.get_backends())}[/red]")
                 return
         else:
             # Show all backends
-            add_models_to_table("groq", GROQ_MODELS, "Cloud")
-            add_models_to_table("openai", OPENAI_MODELS, "Cloud")
-            add_models_to_table("ollama", OLLAMA_MODELS, "Local")
+            # add_models_to_table("groq", GROQ_MODELS, "Cloud")
+            # add_models_to_table("openai", OPENAI_MODELS, "Cloud")
+            # add_models_to_table("ollama", OLLAMA_MODELS, "Local")
+            add_models_to_table("groq", self.config_manager.get_models("groq"), "Cloud")
+            add_models_to_table("openai",self.config_manager.get_models("openai") , "Cloud")
+            add_models_to_table("ollama",self.config_manager.get_models("ollama") , "Local")
         
         console.print(table)
         
@@ -221,7 +227,8 @@ class BeagleMindCLI:
             # f"Model: [magenta]{self.config.get('default_model', GROQ_MODELS[0])}[/magenta]\n"
             # f"Temperature: [yellow]{self.config.get('default_temperature', 0.3)}[/yellow]",
             f"Backend: [cyan]{self.config_manager.get('default_backend','groq').upper()}[/cyan]\n"
-            f"Model: [magenta]{self.config_manager.get('default_model',GROQ_MODELS[0])}[/magenta]\n"
+            # f"Model: [magenta]{self.config_manager.get('default_model',GROQ_MODELS[0])}[/magenta]\n"
+            f"Model: [magenta]{self.config_manager.get('default_model', self.config_manager.get_models('groq')[0])}[/magenta]\n"
             f"Temperature: [yellow]{self.config_manager.get('default_temperature', 0.3)}[/yellow]",
             title="Current Configuration",
             border_style="blue"
@@ -230,17 +237,23 @@ class BeagleMindCLI:
     
     def _check_model_availability(self, backend: str, model: str) -> str:
         """Check if a model is available (basic check)"""
+        # try:
+        #     if backend == "groq":
+        #         return "Available" if model in GROQ_MODELS else "Unknown"
+        #     elif backend == "openai":
+        #         return "Available" if model in OPENAI_MODELS else "Unknown"
+        #     elif backend == "ollama":
+        #         return "Available" if model in OLLAMA_MODELS else "Unknown"
+        #     else:
+        #         return "Unknown Backend"
+        # except Exception:
+        #     return "Check Failed"
         try:
-            if backend == "groq":
-                return "Available" if model in GROQ_MODELS else "Unknown"
-            elif backend == "openai":
-                return "Available" if model in OPENAI_MODELS else "Unknown"
-            elif backend == "ollama":
-                return "Available" if model in OLLAMA_MODELS else "Unknown"
-            else:
-                return "Unknown Backend"
+          models = self.config_manager.get_models(backend)
+          return "Available" if model in models else "Unknown"
         except Exception:
-            return "Check Failed"
+          return "Check Failed"
+
     
     def chat(self, prompt: str, backend: str = None, model: str = None, 
              temperature: float = None, search_strategy: str = "adaptive",
@@ -259,22 +272,37 @@ class BeagleMindCLI:
         # backend = backend or self.config.get("default_backend", "groq")
         # model = model or self.config.get("default_model", GROQ_MODELS[0])
         # temperature = temperature if temperature is not None else self.config.get("default_temperature", 0.3)
+        # model = model or self.config_manager.get("default_model", GROQ_MODELS[0])
+
         backend = backend or self.config_manager.get("default_backend", "groq")
-        model = model or self.config_manager.get("default_model", GROQ_MODELS[0])
+        available_models = self.config_manager.get_models(backend)
+        default_model = available_models[0] if available_models else "unknown-model"
+        model = model or self.config_manager.get("default_model", default_model)
         temperature = temperature if temperature is not None else self.config_manager.get("default_temperature", 0.3)
-    
+
+
         
         # Validate backend and model
-        if backend not in LLM_BACKENDS:
-            console.print(f"[red]Invalid backend: {backend}. Available: {', '.join(LLM_BACKENDS)}[/red]")
-            return
+        # if backend not in LLM_BACKENDS:
+        #     console.print(f"[red]Invalid backend: {backend}. Available: {', '.join(LLM_BACKENDS)}[/red]")
+        #     return
         
-        if backend == "groq":
-            available_models = GROQ_MODELS
-        elif backend == "openai":
-            available_models = OPENAI_MODELS
-        else:  # ollama
-            available_models = OLLAMA_MODELS
+        # if backend == "groq":
+        #     available_models = GROQ_MODELS
+        # elif backend == "openai":
+        #     available_models = OPENAI_MODELS
+        # else:  # ollama
+        #     available_models = OLLAMA_MODELS
+
+        # Validate backend
+        available_backends = self.config_manager.get("available_backends", [])
+        if backend not in available_backends:
+            console.print(f"[red]Invalid backend: {backend}. Available: {', '.join(available_backends)}[/red]")
+            return
+
+        # Get models for the selected backend
+        available_models = self.config_manager.get_models(backend)
+
             
         if model not in available_models:
             console.print(f"[red]Model '{model}' not available for backend '{backend}'[/red]")
@@ -374,20 +402,36 @@ class BeagleMindCLI:
         # model = model or self.config.get("default_model", GROQ_MODELS[0])
         # temperature = temperature if temperature is not None else self.config.get("default_temperature", 0.3)
         backend = backend or self.config_manager.get("default_backend", "groq")
-        model = model or self.config_manager.get("default_model",GROQ_MODELS[0] )
+        # Get available models for the backend
+        available_models = self.config_manager.get_models(backend)
+        model = model or self.config_manager.get("default_model", available_models[0] if available_models else "unknown-model")
         temperature = temperature if temperature is not None else self.config_manager.get("default_temperature", 0.3)
+
         
         # Validate backend and model
-        if backend not in LLM_BACKENDS:
-            console.print(f"[red]Error: Invalid backend '{backend}'. Available: {', '.join(LLM_BACKENDS)}[/red]")
-            return
+        # if backend not in LLM_BACKENDS:
+        #     console.print(f"[red]Error: Invalid backend '{backend}'. Available: {', '.join(LLM_BACKENDS)}[/red]")
+        #     return
         
-        if backend == "groq":
-            available_models = GROQ_MODELS
-        elif backend == "openai":
-            available_models = OPENAI_MODELS
-        else:  # ollama
-            available_models = OLLAMA_MODELS
+        # if backend == "groq":
+        #     available_models = GROQ_MODELS
+        # elif backend == "openai":
+        #     available_models = OPENAI_MODELS
+        # else:  # ollama
+        #     available_models = OLLAMA_MODELS
+
+        available_backends = self.config_manager.get("available_backends", [])
+        if backend not in available_backends:
+            console.print(f"[red]Invalid backend: {backend}. Available: {', '.join(available_backends)}[/red]")
+            return
+
+        # Get models for the selected backend
+        available_models = self.config_manager.get_models(backend)
+
+            
+        if model not in available_models:
+            console.print(f"[red]Model '{model}' not available for backend '{backend}'[/red]")
+            return
             
         if model not in available_models:
             console.print(f"[red]Error: Model '{model}' not available for backend '{backend}'[/red]")
