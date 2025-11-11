@@ -204,7 +204,7 @@ class BeagleMindCLI:
                 add_models_to_table("openai", self.config_manager.get_models("openai"), "Cloud")
             elif backend == "ollama":
                 # add_models_to_table("ollama", OLLAMA_MODELS, "Local")
-                add_models_to_table("ollama", self.config_manager.get_models("ollama"), "Cloud")
+                add_models_to_table("ollama", self.config_manager.get_models("ollama"), "Local")
             else:
                 # console.print(f"[red]Unknown backend: {backend}. Available: {', '.join(LLM_BACKENDS)}[/red]")
                 console.print(f"[red]Unknown backend: {backend}. Available: {', '.join(self.config_manager.get_backends())}[/red]")
