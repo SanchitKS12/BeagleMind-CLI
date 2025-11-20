@@ -75,19 +75,3 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         run: |
           twine upload dist/*
-  sync:
-    needs: code-format
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          
-      - name: Push to GitLab
-        run: |
-          git config --global user.name 'fayezzouari'
-          git config --global user.email 'fayez.zouari@insat.ucar.tn'
-          git remote add gitlab https://fayezzouari:${{ secrets.GITLAB_TOKEN }}@gitlab.com/fayezzouari/BeagleMind-RAG-PoC
-          git push gitlab main --force
